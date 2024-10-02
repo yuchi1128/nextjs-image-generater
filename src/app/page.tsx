@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { supabase } from "../utils/supabase";
 
 interface GenerationResponse {
   artifacts: Array<{
@@ -13,12 +14,12 @@ interface GenerationResponse {
 function App() {
   const [generatedImage, setGeneratedImage] = useState<string | null>(null);
   const [prompt, setPrompt] = useState("");
-
   const engineId = "stable-diffusion-v1-6";
   const apiKey = process.env.NEXT_PUBLIC_STABILITY_API_KEY;
   const apiHost = "https://api.stability.ai";
 
   const handleGenerateImage = async () => {
+    console.log(apiKey);
     const response = await fetch(
       `${apiHost}/v1/generation/${engineId}/text-to-image`,
       {
@@ -52,6 +53,35 @@ function App() {
     setGeneratedImage(`data:image/png;base64,${base64Image}`);
   };
 
+  const handleSaveImage = async () => {
+    if (!generatedImage) {
+      return;
+    }
+
+    const fileName = `${prompt}.png`;
+
+    // Base64文字列からプレフィックスを削除
+    const base64Data = generatedImage.replace(/^data:image\/png;base64,/, "");
+
+    // Base64をバイナリデータに変換
+    const binaryData = Uint8Array.from(atob(base64Data), (char) =>
+      char.charCodeAt(0)
+    );
+
+    // 画像をストレージにアップロード
+    const { error } = await supabase.storage
+      .from("image-generate")
+      .upload(fileName, binaryData.buffer, {
+        contentType: "image/png",
+      });
+
+    if (error) {
+      console.error("Error uploading image: ", error);
+    } else {
+      console.log("Image uploaded successfully!");
+    }
+  };
+
   return (
     <>
       <div>
@@ -72,6 +102,12 @@ function App() {
         <div>
           <h2>Generated Image:</h2>
           <img src={generatedImage} alt="Generated" />
+          <button
+            className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
+            onClick={handleSaveImage}
+          >
+            保存
+          </button>
         </div>
       )}
     </>
