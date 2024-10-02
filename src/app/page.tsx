@@ -1,3 +1,5 @@
+"use client";
+
 import { useState } from "react";
 
 interface GenerationResponse {
@@ -13,7 +15,7 @@ function App() {
   const [prompt, setPrompt] = useState("");
 
   const engineId = "stable-diffusion-v1-6";
-  const apiKey = process.env.NEXT_STABILITY_API_KEY;
+  const apiKey = process.env.NEXT_PUBLIC_STABILITY_API_KEY;
   const apiHost = "https://api.stability.ai";
 
   const handleGenerateImage = async () => {
